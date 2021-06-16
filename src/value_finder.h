@@ -14,10 +14,17 @@ typedef int value_finder_output_event_t(void *data,
                                         yaml_event_t *);
 
 typedef struct value_finder_s {
+    char *last_scalar_value;
+    size_t last_scalar_value_size;
+    size_t last_scalar_value_length;
+    yaml_event_type_t last_event_type;
     char *value_path;
-    int in_value_block;
     value_finder_input_event_t *input;
     value_finder_output_event_t *output;
+    char *current_block;
+    size_t current_block_size;
+    size_t current_block_length;
+    int scalar_sequence;
 } value_finder_t;
 
 int value_finder_init(value_finder_t *);

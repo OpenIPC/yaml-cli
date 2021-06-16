@@ -15,36 +15,47 @@ static int on_read_input_file(void *data, unsigned char *buffer, size_t size,
 static yaml_iterator_event_result_t on_iterator_event(void *data,
         yaml_event_t *event) {
     buffer_emitter_t *emitter = (buffer_emitter_t *)data;
-    if (!emitter->input(data, event))
-        return YAML_ITERATOR_EVENT_STOP;
 
     if (!g_value_finder->input(g_value_finder, event))
         return YAML_ITERATOR_EVENT_STOP;
 
-    return YAML_ITERATOR_EVENT_EATEN;
+    if (g_args->mode == WORK_SET) {
+        if (!emitter->input(data, event))
+            return YAML_ITERATOR_EVENT_STOP;
+    }
+
+    if (g_args->mode == WORK_SET)
+        return YAML_ITERATOR_EVENT_EATEN;
+
+    return YAML_ITERATOR_EVENT_CONTINUE;
 }
+
+static int g_value_finded = 0;
 
 static int on_value_finded(void *data,
                            yaml_event_t *event) {
     if (g_args->mode == WORK_GET) {
-        fprintf(stdout, "%s", event->data.scalar.value);
-        return 0;
+        fprintf(stdout, "%s\n", event->data.scalar.value);
+        g_value_finded = 1;
+        return 1;
     }
 
+    g_value_finded = 1;
+    free(event->data.scalar.value);
+    event->data.scalar.length = strlen(g_args->variable_value);
+    event->data.scalar.value = malloc(event->data.scalar.length + 1);
+    strncpy((char *)event->data.scalar.value, g_args->variable_value,
+            event->data.scalar.length);
+    event->data.scalar.value [event->data.scalar.length] = 0;
 
-    // TODO modify value and return
-    int aa = 1;
-    aa = 2;
-
-    return 1;
+    return 0;
 }
 
 int main(int argc, char *argv[]) {
     yaml_iterator_t iterator;
     buffer_emitter_t emitter;
     value_finder_t value_finder;
-
-    int ret_code = EXIT_SUCCESS;
+    int emitter_ret_code = EXIT_SUCCESS;
 
     if (!init_input(argc, argv))
         return EXIT_FAILURE;
@@ -61,28 +72,38 @@ int main(int argc, char *argv[]) {
     if (!buffer_emitter_init(&emitter))
         return EXIT_FAILURE;
 
-    if (!value_finder_init(&value_finder))
-        return EXIT_FAILURE;
-
     g_value_finder = &value_finder;
     value_finder.value_path = g_args->variable_path;
     value_finder.output = on_value_finded;
+
+    if (!value_finder_init(&value_finder))
+        return EXIT_FAILURE;
 
     if (!yaml_iterator_run(&iterator))
         return EXIT_FAILURE;
 
     if (buffer_emitter_error(&emitter))
-        ret_code = EXIT_FAILURE;
+        emitter_ret_code = EXIT_FAILURE;
 
     buffer_emitter_deinit(&emitter);
     value_finder_deinit(&value_finder);
     deinit_input();
 
-    if (ret_code != EXIT_FAILURE) {
-        if (!write_to_out_file(emitter.buffer, emitter.buffer_pos))
-            return EXIT_FAILURE;
+    if (g_args->mode == WORK_SET) {
+        if (emitter_ret_code != EXIT_FAILURE) {
+            if (!write_to_out_file(emitter.buffer, emitter.buffer_pos))
+                return EXIT_FAILURE;
+        }
     }
 
     free(emitter.buffer);
-    return ret_code;
+
+    if (g_args->mode == WORK_GET) {
+        return !g_value_finded;
+    } else {
+        if (emitter_ret_code != EXIT_SUCCESS)
+            return EXIT_FAILURE;
+
+        return !g_value_finded;
+    }
 }

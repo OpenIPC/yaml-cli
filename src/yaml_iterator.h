@@ -10,7 +10,8 @@ extern "C" {
 typedef enum yaml_iterator_event_result_e {
     /** Let the parser choose the encoding. */
     YAML_ITERATOR_EVENT_EATEN,
-    YAML_ITERATOR_EVENT_STOP
+    YAML_ITERATOR_EVENT_STOP,
+    YAML_ITERATOR_EVENT_CONTINUE
 } yaml_iterator_event_result_t;
 
 typedef yaml_iterator_event_result_t yaml_iterator_event(void *data,
