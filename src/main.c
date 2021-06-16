@@ -22,10 +22,10 @@ static yaml_iterator_event_result_t on_iterator_event(void *data,
 int main(int argc, char *argv[]) {
     yaml_iterator_t iterator;
     buffer_emitter_t emitter;
-    int ret_code = 0;
+    int ret_code = EXIT_SUCCESS;
 
     if (!init_input(argc, argv))
-        return 1;
+        return EXIT_FAILURE;
 
     g_args = get_args();
 
@@ -37,19 +37,21 @@ int main(int argc, char *argv[]) {
     emitter.unicode = g_args->unicode;
 
     if (!buffer_emitter_init(&emitter))
-        return 1;
+        return EXIT_FAILURE;
 
     if (!yaml_iterator_run(&iterator))
-        return 1;
+        return EXIT_FAILURE;
 
     if (buffer_emitter_error(&emitter))
-        ret_code = 1;
+        ret_code = EXIT_FAILURE;
 
     buffer_emitter_deinit(&emitter);
     deinit_input();
 
-    if (!write_to_out_file(emitter.buffer, emitter.buffer_pos))
-        return 1;
+    if (ret_code != EXIT_FAILURE) {
+        if (!write_to_out_file(emitter.buffer, emitter.buffer_pos))
+            return EXIT_FAILURE;
+    }
 
     free(emitter.buffer);
     return ret_code;
