@@ -17,6 +17,7 @@ static int parse_args(int argc, char *argv[]) {
     int k = 0;
 
     memset(&g_args, 0, sizeof(g_args));
+    g_args.mode = WORK_UNKNOWN;
 
     for (k = 1; k < argc; k ++) {
         if (strcmp(argv[k], "-h") == 0
@@ -41,6 +42,29 @@ static int parse_args(int argc, char *argv[]) {
 
             if (g_args.out_file.path == NULL)
                 return 0;
+        } else if (strcmp(argv[k], "-s") == 0
+                   || strcmp(argv[k], "--set") == 0) {
+            if ((k + 2) >= argc) {
+                fprintf(stderr,
+                        "%s parameter must be used with <variable_path> <variable_value>\n", argv[k]);
+                return 0;
+            }
+
+            g_args.variable_path = argv[k + 1];
+            g_args.variable_value = argv[k + 2];
+            g_args.mode = WORK_SET;
+            k += 2;
+        } else if (strcmp(argv[k], "-g") == 0
+                   || strcmp(argv[k], "--get") == 0) {
+            if ((k + 1) >= argc) {
+                fprintf(stderr,
+                        "%s parameter must be used with <variable_path>\n", argv[k]);
+                return 0;
+            }
+
+            g_args.variable_path = argv[k + 1];
+            g_args.mode = WORK_GET;
+            k++;
         } else {
             fprintf(stderr, "Unrecognized option: %s\n"
                     "Try `%s --help` for more information.\n",
@@ -52,12 +76,18 @@ static int parse_args(int argc, char *argv[]) {
     /* Display the help string. */
 
     if (g_args.help) {
-        printf("%s <input\n"
-               "or\n%s -h | --help\nDeconstruct a YAML stream\n\nOptions:\n"
+        printf("%s YAML files values getter/setter\n\nOptions:\n"
                "-h, --help\t\tdisplay this help and exit\n"
+               "-i, --input <file>\tuse input file\n"
+               "-o, --output <file>\tuse output file\n"
                "-c, --canonical\t\toutput in the canonical YAML format\n"
                "-u, --unicode\t\toutput unescaped non-ASCII characters\n",
-               argv[0], argv[0]);
+               argv[0]);
+        return 0;
+    }
+
+    if (g_args.mode == WORK_UNKNOWN) {
+        fprintf(stderr, "No mode specified, use -s or -g\n");
         return 0;
     }
 
@@ -75,7 +105,7 @@ static FILE *open_file(const char *file_type, const char *path,
     file = fopen(path, modes);
 
     if (path == NULL)
-        printf("Failed to open %s file %s\n", file_type, path);
+        fprintf(stderr, "Failed to open %s file %s\n", file_type, path);
 
     return file;
 }
@@ -119,7 +149,7 @@ int write_to_out_file(char *buffer, size_t buffer_size) {
         return 0;
 
     if ((fwrite(buffer, buffer_size, 1, g_args.out_file.file)) != 1) {
-        printf("File write error....\n");
+        fprintf(stderr, "File write failed\n");
         ret_code = 0;
     }
 

@@ -12,10 +12,19 @@ typedef struct file_info_s {
     FILE *file;
 } file_info_t;
 
+typedef enum work_mode_e {
+    WORK_SET,
+    WORK_GET,
+    WORK_UNKNOWN
+} work_mode_t;
+
 typedef struct prog_args_s {
     int help;
     int canonical;
     int unicode;
+    char *variable_path;
+    char *variable_value;
+    work_mode_t mode;
     file_info_t in_file;
     file_info_t out_file;
 } prog_args_t;
