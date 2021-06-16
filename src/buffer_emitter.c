@@ -1,7 +1,7 @@
 #include "buffer_emitter.h"
 
-#define INITIAL_BUFFER_SIZE 0 //1024
-#define EXTRA_GROW_SIZE 10  // 1024
+#define INITIAL_BUFFER_SIZE     10 * 1024 // 10 Kb
+#define EXTRA_GROW_SIZE         INITIAL_BUFFER_SIZE
 
 static void show_error(yaml_emitter_t *emitter) {
     switch (emitter->error) {
@@ -28,7 +28,6 @@ static int grow_buffer_if_necessary(buffer_emitter_t *e, size_t size) {
     const size_t free_size = (e->buffer_size - e->buffer_pos);
 
     if (free_size < size) {
-
         if (e->buffer == NULL) {
             e->buffer_size = size + EXTRA_GROW_SIZE;
             e->buffer = malloc(e->buffer_size);
@@ -98,8 +97,8 @@ int buffer_emitter_init(buffer_emitter_t *e) {
     }
 
     if (INITIAL_BUFFER_SIZE > 0) {
-        e->buffer = malloc(e->buffer_size);
         e->buffer_size = INITIAL_BUFFER_SIZE;
+        e->buffer = malloc(e->buffer_size);
     }
 
     return 1;

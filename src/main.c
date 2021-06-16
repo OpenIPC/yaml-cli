@@ -51,5 +51,6 @@ int main(int argc, char *argv[]) {
     if (!write_to_out_file(emitter.buffer, emitter.buffer_pos))
         return 1;
 
+    free(emitter.buffer);
     return ret_code;
 }
