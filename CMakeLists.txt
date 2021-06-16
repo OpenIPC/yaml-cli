@@ -8,7 +8,7 @@ find_package(yaml REQUIRED)
 
 add_executable(${PROJECT_NAME} "")
 
-file(GLOB_RECURSE PRJ_SRCS src/*.c src/*.h)
+file(GLOB_RECURSE PRJ_SRCS src/*.c src/*.h yaml-cli.astylerc)
 target_sources(${PROJECT_NAME} PRIVATE ${PRJ_SRCS})
 
 target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC
