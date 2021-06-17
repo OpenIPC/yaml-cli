@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 
-project(yaml-cli LANGUAGES C VERSION 0.1)
+project(yaml-cli LANGUAGES C VERSION 0.0.1)
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
