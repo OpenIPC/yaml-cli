@@ -4,7 +4,9 @@ project(yaml-cli LANGUAGES C)
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
-find_package(yaml REQUIRED)
+#find_package(yaml REQUIRED)
+
+add_subdirectory(libyaml)
 
 add_executable(${PROJECT_NAME} "")
 
@@ -15,4 +17,5 @@ target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC
     ${PROJECT_SOURCE_DIR}/src
     )
 
-target_link_libraries(${PROJECT_NAME} PUBLIC ${yaml_LIBRARIES})
+#target_link_libraries(${PROJECT_NAME} PUBLIC ${yaml_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} PUBLIC yaml)
