@@ -76,13 +76,13 @@ static int parse_args(int argc, char *argv[]) {
     /* Display the help string. */
 
     if (g_args.help) {
-        printf("%s YAML files values getter/setter\n\nOptions:\n"
+        printf("%s v%s YAML files values getter/setter\n\nOptions:\n"
                "-h, --help\t\tdisplay this help and exit\n"
                "-i, --input <file>\tuse input file\n"
                "-o, --output <file>\tuse output file\n"
                "-c, --canonical\t\toutput in the canonical YAML format\n"
                "-u, --unicode\t\toutput unescaped non-ASCII characters\n",
-               argv[0]);
+               argv[0], PROJECT_VERSION);
         return 0;
     }
 
