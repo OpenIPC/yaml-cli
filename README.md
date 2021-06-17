@@ -2,6 +2,13 @@
 
 Commands example:
 
-./yaml-cli -i majestic.yaml -s .image.contrast 11111
+```
+root@openipc:/# yaml-cli -i /etc/majestic.yaml -g .video0.codec
+h264
 
-./yaml-cli -i majestic.yaml -g .image.contrast
+root@openipc:/# yaml-cli -i /etc/majestic.yaml -s .video0.codec h265
+
+root@openipc:/# yaml-cli -i /etc/majestic.yaml -g .video0.codec
+h265
+```
+
