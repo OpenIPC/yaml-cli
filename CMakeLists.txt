@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 
-project(yaml-cli LANGUAGES C VERSION 0.0.1)
+project(yaml-cli LANGUAGES C VERSION 0.0.3)
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
@@ -22,4 +22,4 @@ target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC
 #target_link_libraries(${PROJECT_NAME} PUBLIC ${yaml_LIBRARIES})
 target_link_libraries(${PROJECT_NAME} PUBLIC yaml)
 
-install (TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_BINDIR})
+install (TARGETS ${PROJECT_NAME} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
