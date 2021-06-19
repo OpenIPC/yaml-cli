@@ -21,3 +21,5 @@ target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC
 
 #target_link_libraries(${PROJECT_NAME} PUBLIC ${yaml_LIBRARIES})
 target_link_libraries(${PROJECT_NAME} PUBLIC yaml)
+
+install (TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_BINDIR})
