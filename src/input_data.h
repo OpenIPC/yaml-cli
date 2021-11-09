@@ -15,6 +15,7 @@ typedef struct file_info_s {
 typedef enum work_mode_e {
     WORK_SET,
     WORK_GET,
+    WORK_DEL,
     WORK_UNKNOWN
 } work_mode_t;
 

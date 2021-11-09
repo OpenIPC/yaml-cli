@@ -24,7 +24,7 @@ static int parse_args(int argc, char *argv[]) {
 
     for (k = 1; k < argc; k ++) {
         if (strcmp(argv[k], "-h") == 0
-            || strcmp(argv[k], "--help") == 0) {
+                || strcmp(argv[k], "--help") == 0) {
             g_args.help = 1;
             break;
         } else if (strcmp(argv[k], "-c") == 0
@@ -68,6 +68,18 @@ static int parse_args(int argc, char *argv[]) {
             g_args.variable_path = argv[k + 1];
             g_args.mode = WORK_GET;
             k++;
+        } else if (strcmp(argv[k], "-d") == 0
+                   || strcmp(argv[k], "--del") == 0) {
+            if ((k + 1) >= argc) {
+                fprintf(stderr,
+                        "%s parameter must be used with <variable_path>\n", argv[k]);
+                return 0;
+            }
+
+            g_args.variable_path = argv[k + 1];
+            // g_args.variable_value = argv[k + 1];
+            g_args.mode = WORK_DEL;
+            k++;
         } else {
             fprintf(stderr, "Unrecognized option: %s\n"
                     "Try `%s --help` for more information.\n",
@@ -79,7 +91,7 @@ static int parse_args(int argc, char *argv[]) {
     /* Display the help string. */
 
     if (g_args.help) {
-        printf("%s v%s YAML files values getter/setter\n\nOptions:\n"
+        printf("%s v%s YAML files values getter/setter/deleter\n\nOptions:\n"
                "-h, --help\t\tdisplay this help and exit\n"
                "-i, --input <file>\tuse input file\n"
                "-o, --output <file>\tuse output file\n"
@@ -90,7 +102,7 @@ static int parse_args(int argc, char *argv[]) {
     }
 
     if (g_args.mode == WORK_UNKNOWN) {
-        fprintf(stderr, "No mode specified, use -s or -g\n");
+        fprintf(stderr, "No mode specified, use -s, -g, or -d\n");
         return 0;
     }
 
