@@ -1,6 +1,7 @@
 ![OpenIPC Logo](https://cdn.themactep.com/images/logo_openipc.png)
 
 ## yaml-cli
+_Simple YAML console tool_
 
 Commands example:
 
