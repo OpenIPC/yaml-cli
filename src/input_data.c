@@ -1,7 +1,7 @@
 #include "input_data.h"
 
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define DEFAULT_INPUT_FILE "/etc/majestic.yaml"
 
@@ -22,34 +22,35 @@ static int parse_args(int argc, char *argv[]) {
     memset(&g_args, 0, sizeof(g_args));
     g_args.mode = WORK_UNKNOWN;
 
-    for (k = 1; k < argc; k ++) {
-        if (strcmp(argv[k], "-h") == 0
-                || strcmp(argv[k], "--help") == 0) {
+    for (k = 1; k < argc; k++) {
+        if (strcmp(argv[k], "-h") == 0 || strcmp(argv[k], "--help") == 0) {
             g_args.help = 1;
             break;
-        } else if (strcmp(argv[k], "-c") == 0
-                   || strcmp(argv[k], "--canonical") == 0) {
+        } else if (strcmp(argv[k], "-c") == 0 ||
+                   strcmp(argv[k], "--canonical") == 0) {
             g_args.canonical = 1;
-        } else if (strcmp(argv[k], "-u") == 0
-                   || strcmp(argv[k], "--unicode") == 0) {
+        } else if (strcmp(argv[k], "-u") == 0 ||
+                   strcmp(argv[k], "--unicode") == 0) {
             g_args.unicode = 1;
-        } else if (strcmp(argv[k], "-i") == 0
-                   || strcmp(argv[k], "--input") == 0) {
+        } else if (strcmp(argv[k], "-i") == 0 ||
+                   strcmp(argv[k], "--input") == 0) {
             g_args.in_file.path = handle_file_param(&k, argc, argv);
 
             if (g_args.in_file.path == NULL)
                 return 0;
-        } else if (strcmp(argv[k], "-o") == 0
-                   || strcmp(argv[k], "--output") == 0) {
+        } else if (strcmp(argv[k], "-o") == 0 ||
+                   strcmp(argv[k], "--output") == 0) {
             g_args.out_file.path = handle_file_param(&k, argc, argv);
 
             if (g_args.out_file.path == NULL)
                 return 0;
-        } else if (strcmp(argv[k], "-s") == 0
-                   || strcmp(argv[k], "--set") == 0) {
+        } else if (strcmp(argv[k], "-s") == 0 ||
+                   strcmp(argv[k], "--set") == 0) {
             if ((k + 2) >= argc) {
                 fprintf(stderr,
-                        "%s parameter must be used with <variable_path> <variable_value>\n", argv[k]);
+                        "%s parameter must be used with <variable_path> "
+                        "<variable_value>\n",
+                        argv[k]);
                 return 0;
             }
 
@@ -57,22 +58,24 @@ static int parse_args(int argc, char *argv[]) {
             g_args.variable_value = argv[k + 2];
             g_args.mode = WORK_SET;
             k += 2;
-        } else if (strcmp(argv[k], "-g") == 0
-                   || strcmp(argv[k], "--get") == 0) {
+        } else if (strcmp(argv[k], "-g") == 0 ||
+                   strcmp(argv[k], "--get") == 0) {
             if ((k + 1) >= argc) {
                 fprintf(stderr,
-                        "%s parameter must be used with <variable_path>\n", argv[k]);
+                        "%s parameter must be used with <variable_path>\n",
+                        argv[k]);
                 return 0;
             }
 
             g_args.variable_path = argv[k + 1];
             g_args.mode = WORK_GET;
             k++;
-        } else if (strcmp(argv[k], "-d") == 0
-                   || strcmp(argv[k], "--del") == 0) {
+        } else if (strcmp(argv[k], "-d") == 0 ||
+                   strcmp(argv[k], "--del") == 0) {
             if ((k + 1) >= argc) {
                 fprintf(stderr,
-                        "%s parameter must be used with <variable_path>\n", argv[k]);
+                        "%s parameter must be used with <variable_path>\n",
+                        argv[k]);
                 return 0;
             }
 
@@ -81,7 +84,8 @@ static int parse_args(int argc, char *argv[]) {
             g_args.mode = WORK_DEL;
             k++;
         } else {
-            fprintf(stderr, "Unrecognized option: %s\n"
+            fprintf(stderr,
+                    "Unrecognized option: %s\n"
                     "Try `%s --help` for more information.\n",
                     argv[k], argv[0]);
             return 0;
@@ -133,9 +137,7 @@ static int open_output_file() {
     return g_args.out_file.file != NULL;
 }
 
-prog_args_t *get_args() {
-    return &g_args;
-}
+prog_args_t *get_args() { return &g_args; }
 
 int init_input(int argc, char *argv[]) {
     if (!parse_args(argc, argv))

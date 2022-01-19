@@ -7,8 +7,7 @@ extern "C" {
 
 #include <yaml.h>
 
-typedef int buffer_emitter_input_t(void *data,
-                                   yaml_event_t *);
+typedef int buffer_emitter_input_t(void *data, yaml_event_t *);
 
 typedef struct buffer_emitter_s {
     char *buffer;
@@ -30,4 +29,3 @@ int buffer_emitter_error(buffer_emitter_t *);
 #endif
 
 #endif /* #ifndef BUFFER_EMITTER_H */
-

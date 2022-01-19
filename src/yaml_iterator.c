@@ -18,10 +18,12 @@ static void show_parser_error(yaml_parser_t *parser) {
 
     case YAML_SCANNER_ERROR:
         if (parser->context) {
-            fprintf(stderr, "Scanner error: %s at line %lu, column %lu\n"
-                    "%s at line %lu, column %lu\n", parser->context,
-                    parser->context_mark.line + 1, parser->context_mark.column + 1,
-                    parser->problem, parser->problem_mark.line + 1,
+            fprintf(stderr,
+                    "Scanner error: %s at line %lu, column %lu\n"
+                    "%s at line %lu, column %lu\n",
+                    parser->context, parser->context_mark.line + 1,
+                    parser->context_mark.column + 1, parser->problem,
+                    parser->problem_mark.line + 1,
                     parser->problem_mark.column + 1);
         } else {
             fprintf(stderr, "Scanner error: %s at line %lu, column %lu\n",
@@ -32,10 +34,12 @@ static void show_parser_error(yaml_parser_t *parser) {
 
     case YAML_PARSER_ERROR:
         if (parser->context) {
-            fprintf(stderr, "Parser error: %s at line %lu, column %lu\n"
-                    "%s at line %lu, column %lu\n", parser->context,
-                    parser->context_mark.line + 1, parser->context_mark.column + 1,
-                    parser->problem, parser->problem_mark.line + 1,
+            fprintf(stderr,
+                    "Parser error: %s at line %lu, column %lu\n"
+                    "%s at line %lu, column %lu\n",
+                    parser->context, parser->context_mark.line + 1,
+                    parser->context_mark.column + 1, parser->problem,
+                    parser->problem_mark.line + 1,
                     parser->problem_mark.column + 1);
         } else {
             fprintf(stderr, "Parser error: %s at line %lu, column %lu\n",

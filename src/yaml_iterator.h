@@ -15,7 +15,7 @@ typedef enum yaml_iterator_event_result_e {
 } yaml_iterator_event_result_t;
 
 typedef yaml_iterator_event_result_t yaml_iterator_event(void *data,
-        yaml_event_t *);
+                                                         yaml_event_t *);
 
 typedef struct yaml_iterator_s {
     yaml_read_handler_t *read_handler;
@@ -31,4 +31,3 @@ int yaml_iterator_run(struct yaml_iterator_s *);
 #endif
 
 #endif /* #ifndef YAML_ITERATOR_H */
-

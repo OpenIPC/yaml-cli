@@ -7,11 +7,9 @@ extern "C" {
 
 #include <yaml.h>
 
-typedef int value_finder_input_event_t(void *data,
-                                       yaml_event_t *);
+typedef int value_finder_input_event_t(void *data, yaml_event_t *);
 
-typedef int value_finder_output_event_t(void *data,
-                                        yaml_event_t *);
+typedef int value_finder_output_event_t(void *data, yaml_event_t *);
 
 typedef struct value_finder_s {
     char *last_scalar_value;
@@ -35,4 +33,3 @@ int value_finder_deinit(value_finder_t *);
 #endif
 
 #endif /* #ifndef VALUE_FINDER_H */
-

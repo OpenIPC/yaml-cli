@@ -10,6 +10,12 @@ add_subdirectory(libyaml)
 
 add_executable(${PROJECT_NAME} "")
 
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+  message(STATUS "Build DEBUG configuration")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ggdb -O0 -fno-omit-frame-pointer -fsanitize=address")
+  set(CMAKE_LINKER_FLAGS "${CMAKE_LINKER_FLAGS} -fsanitize=address")
+endif()
+
 file(GLOB_RECURSE PRJ_SRCS src/*.c src/*.h yaml-cli.astylerc)
 target_sources(${PROJECT_NAME} PRIVATE ${PRJ_SRCS})
 

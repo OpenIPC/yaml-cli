@@ -1,7 +1,7 @@
 #include "buffer_emitter.h"
 
-#define INITIAL_BUFFER_SIZE     10 * 1024 // 10 Kb
-#define EXTRA_GROW_SIZE         INITIAL_BUFFER_SIZE
+#define INITIAL_BUFFER_SIZE 10 * 1024 // 10 Kb
+#define EXTRA_GROW_SIZE INITIAL_BUFFER_SIZE
 
 static void show_error(yaml_emitter_t *emitter) {
     switch (emitter->error) {
@@ -44,7 +44,7 @@ static int grow_buffer_if_necessary(buffer_emitter_t *e, size_t size) {
 }
 
 static int write_handler(void *data, unsigned char *buffer, size_t size) {
-    buffer_emitter_t *e = (buffer_emitter_t *) data;
+    buffer_emitter_t *e = (buffer_emitter_t *)data;
 
     if (!grow_buffer_if_necessary(e, size))
         return 0;
@@ -54,8 +54,7 @@ static int write_handler(void *data, unsigned char *buffer, size_t size) {
     return 1;
 }
 
-static int buffer_emitter_input(void *data,
-                                yaml_event_t *event) {
+static int buffer_emitter_input(void *data, yaml_event_t *event) {
     buffer_emitter_t *e = (buffer_emitter_t *)data;
     yaml_emitter_t *emitter = &(e->emitter);
 
@@ -116,6 +115,4 @@ int buffer_emitter_deinit(buffer_emitter_t *e) {
     return 1;
 }
 
-int buffer_emitter_error(buffer_emitter_t *e) {
-    return e->error;
-}
+int buffer_emitter_error(buffer_emitter_t *e) { return e->error; }

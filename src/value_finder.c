@@ -2,8 +2,8 @@
 
 #include <stdio.h>
 
-#define INITIAL_BUFFER_SIZE     1024
-#define BUFFER_GROW_SIZE        INITIAL_BUFFER_SIZE
+#define INITIAL_BUFFER_SIZE 1024
+#define BUFFER_GROW_SIZE INITIAL_BUFFER_SIZE
 
 // #define DEBUG_MESSAGES
 
@@ -16,10 +16,11 @@ static void grow_buffer_if_necessary(char **buf, size_t *size,
 }
 
 static void save_last_scalar(value_finder_t *f, yaml_event_t *event) {
-    grow_buffer_if_necessary(&(f->last_scalar_value), &(f->last_scalar_value_size),
+    grow_buffer_if_necessary(&(f->last_scalar_value),
+                             &(f->last_scalar_value_size),
                              event->data.scalar.length);
 
-    strncpy(f->last_scalar_value, (const char *) event->data.scalar.value,
+    strncpy(f->last_scalar_value, (const char *)event->data.scalar.value,
             event->data.scalar.length);
     f->last_scalar_value_length = event->data.scalar.length;
     f->last_scalar_value[f->last_scalar_value_length] = 0;
@@ -42,10 +43,10 @@ static void start_block_handler(value_finder_t *f) {
 
 static int end_block_handler(value_finder_t *f) {
     int ret_code = 0;
-    char value_block[strlen(f->value_path)];
+    char value_block[strlen(f->value_path)+1];
 
     strcpy(value_block, f->value_path);
-    value_block[strstr(value_block+1, ".") - value_block] = '\0';
+    value_block[strstr(value_block + 1, ".") - value_block] = '\0';
 
     if (!strcmp(f->current_block, value_block))
         ret_code = 1;
@@ -54,7 +55,7 @@ static int end_block_handler(value_finder_t *f) {
     printf("block end: %s\n", f->current_block);
 #endif
 
-    for (int i = f->current_block_length - 1 ; i >= 0 ; i--) {
+    for (int i = f->current_block_length - 1; i >= 0; i--) {
         if (f->current_block[i] == '.') {
             f->current_block[i] = 0;
             f->current_block_length = i;
@@ -64,8 +65,7 @@ static int end_block_handler(value_finder_t *f) {
     return ret_code;
 }
 
-static int key_handler(value_finder_t *f,
-                       yaml_event_t *event) {
+static int key_handler(value_finder_t *f, yaml_event_t *event) {
     const size_t saved_cur_block_length = f->current_block_length;
     int ret_code = 0;
 
@@ -73,7 +73,7 @@ static int key_handler(value_finder_t *f,
                              f->last_scalar_value_length + 1);
 
     strcat(f->current_block, ".");
-    strcat(f->current_block, (const char *) event->data.scalar.value);
+    strcat(f->current_block, (const char *)event->data.scalar.value);
 
     if (!strcmp(f->current_block, f->value_path))
         ret_code = 1;
@@ -94,7 +94,7 @@ static int value_handler(value_finder_t *f) {
                              f->last_scalar_value_length + 1);
 
     strcat(f->current_block, ".");
-    strcat(f->current_block, (const char *) f->last_scalar_value);
+    strcat(f->current_block, (const char *)f->last_scalar_value);
 
     if (!strcmp(f->current_block, f->value_path))
         ret_code = 1;
@@ -124,8 +124,7 @@ static int value_handler(value_finder_t *f) {
 // 3 - найден конец block
 // 4 - найден конец всех block
 
-static int on_input_event(void *data,
-                          yaml_event_t *event) {
+static int on_input_event(void *data, yaml_event_t *event) {
     value_finder_t *f = (value_finder_t *)data;
     int ret_code = 0;
 
