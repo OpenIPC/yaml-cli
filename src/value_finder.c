@@ -43,7 +43,7 @@ static void start_block_handler(value_finder_t *f) {
 
 static int end_block_handler(value_finder_t *f) {
     int ret_code = 0;
-    char value_block[strlen(f->value_path)];
+    char value_block[strlen(f->value_path)+1];
 
     strcpy(value_block, f->value_path);
     value_block[strstr(value_block + 1, ".") - value_block] = '\0';
