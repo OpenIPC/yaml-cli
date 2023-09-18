@@ -96,6 +96,9 @@ static int parse_args(int argc, char *argv[]) {
 
     if (g_args.help) {
         printf("%s v%s YAML files values getter/setter/deleter\n\nOptions:\n"
+               "-s, --set\t\tset value to a key\n"
+               "-g, --get\t\tget key value\n"
+               "-d, --del\t\tdelete a key\n"
                "-h, --help\t\tdisplay this help and exit\n"
                "-i, --input <file>\tuse input file\n"
                "-o, --output <file>\tuse output file\n"
