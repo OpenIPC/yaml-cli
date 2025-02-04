@@ -97,21 +97,6 @@ static int value_handler(value_finder_t *f) {
     return ret_code;
 }
 
-// Схема такая:
-// Эти эвенты вылазят когда новый блок начинается
-// YAML_MAPPING_START_EVENT
-// YAML_MAPPING_END_EVENT
-// Если перед YAML_MAPPING_START_EVENT идёт YAML_SCALAR_EVENT - это имя блока
-// Далее, если идут два YAML_SCALAR_EVENT подряд - значит это key: value
-// На каждый key:value мы создаём полный путь в виде .block.block.key
-// и ищем таким образом наш ключ
-// Возвращаемые значения:
-// 0 - ничего не найдено / value изменён
-// 1 - найден value
-// 2 - найден key
-// 3 - найден конец block
-// 4 - найден конец всех block
-
 static int on_input_event(void *data, yaml_event_t *event) {
     value_finder_t *f = (value_finder_t *)data;
     int ret_code = 0;
