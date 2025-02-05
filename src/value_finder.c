@@ -11,7 +11,10 @@ static void grow_buffer_if_necessary(char **buf, size_t *size,
                                      size_t data_size) {
     if ((*size) <= data_size) {
         *size = data_size + 1 + BUFFER_GROW_SIZE;
-        *buf = realloc(*buf, *size);
+        char *new_buf = realloc(*buf, *size);
+        if (new_buf == NULL)
+            exit(EXIT_FAILURE);
+        *buf = new_buf;
     }
 }
 
@@ -43,10 +46,13 @@ static void start_block_handler(value_finder_t *f) {
 
 static int end_block_handler(value_finder_t *f) {
     int ret_code = 0;
-    char value_block[strlen(f->value_path)+1];
+    char value_block[strlen(f->value_path) + 1];
 
     strcpy(value_block, f->value_path);
-    value_block[strstr(value_block + 1, ".") - value_block] = '\0';
+
+    char *dot_ptr = strstr(value_block + 1, ".");
+    if (dot_ptr != NULL)
+        value_block[dot_ptr - value_block] = '\0';
 
     if (!strcmp(f->current_block, value_block))
         ret_code = 1;
@@ -107,22 +113,22 @@ static int value_handler(value_finder_t *f) {
     return ret_code;
 }
 
-// Схема такая:
-// Эти эвенты вылазят когда новый блок начинается
+// Here's how it works:
+// These events pop up when a new block starts
 // YAML_MAPPING_START_EVENT
 // YAML_MAPPING_END_EVENT
-// Если перед YAML_MAPPING_START_EVENT идёт YAML_SCALAR_EVENT - это имя блока
-// Далее, если идут два YAML_SCALAR_EVENT подряд - значит это key: value
+// If YAML_MAPPING_START_EVENT is preceded by YAML_SCALAR_EVENT, this is the name of the block.
+// Further, if there are two YAML_SCALAR_EVENTs in a row, it means it is key: value.
 
-// На каждый key:value мы создаём полный путь в виде .block.block.key
-// и ищем таким образом наш ключ
+// For each key:value we create a full path in the form .block.block.key
+// and thus search for our key
 
-// Возвращаемые значения:
-// 0 - ничего не найдено / value изменён
-// 1 - найден value
-// 2 - найден key
-// 3 - найден конец block
-// 4 - найден конец всех block
+// Return values:
+// 0 - nothing found / value changed
+// 1 - value found
+// 2 - key found
+// 3 - end of block found
+// 4 - end of all blocks found
 
 static int on_input_event(void *data, yaml_event_t *event) {
     value_finder_t *f = (value_finder_t *)data;
