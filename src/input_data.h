@@ -31,10 +31,17 @@ typedef struct prog_args_s {
 } prog_args_t;
 
 prog_args_t *get_args();
+
+/* Parse argv and open the input file for reading. Returns 1 on success. */
 int init_input(int argc, char *argv[]);
+
+/* Close the input file (safe to call more than once). Call this once the
+ * document has been fully loaded, so the output file may reuse its path. */
 void deinit_input();
 
-int write_to_out_file(char *buffer, size_t buffer_size);
+/* Open the output file for writing and return it (caller closes). Defaults to
+ * the input path when -o was not given. Returns NULL on error. */
+FILE *open_output_file();
 
 #ifdef __cplusplus
 }

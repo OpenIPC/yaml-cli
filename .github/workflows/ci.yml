@@ -1,0 +1,34 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # Release exercises the shipped build; Debug builds with AddressSanitizer
+        # (see CMakeLists.txt) so the test suite runs under ASan/LeakSanitizer.
+        build_type: [Release, Debug]
+    name: ${{ matrix.build_type }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install toolchain
+        run: sudo apt-get update && sudo apt-get install -y cmake build-essential
+
+      - name: Versions
+        run: cmake --version && cc --version
+
+      - name: Configure
+        run: cmake -B build -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+
+      - name: Build
+        run: cmake --build build -j
+
+      - name: Test
+        run: ctest --test-dir build --output-on-failure
