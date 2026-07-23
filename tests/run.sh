@@ -145,6 +145,82 @@ YAML
     fi
 }
 
+array_fixture() {
+    f="$WORK/arr.yaml"
+    cat > "$f" <<'YAML'
+outgoing:
+  - udp://a
+  - unix:/tmp/b
+  - rtmps://c
+keep: kept
+YAML
+    printf '%s' "$f"
+}
+
+case_get_array_element() {
+    f=$(array_fixture)
+    out=$("$BIN" -i "$f" -g .outgoing.1); rc=$?
+    assert_eq "unix:/tmp/b" "$out" "array: get element by index"
+    assert_status 0 "$rc" "array: get element exits 0"
+    "$BIN" -i "$f" -g .outgoing.9 >/dev/null 2>&1
+    assert_status 1 "$?" "array: out-of-range index is not found"
+}
+
+case_get_array_whole() {
+    f=$(array_fixture)
+    out=$("$BIN" -i "$f" -g .outgoing)
+    assert_eq "udp://a
+unix:/tmp/b
+rtmps://c" "$out" "array: get whole list prints elements line by line"
+}
+
+case_set_array_replace() {
+    f=$(array_fixture)
+    "$BIN" -i "$f" -s .outgoing.0 udp://z; rc=$?
+    assert_status 0 "$rc" "array: set element exits 0"
+    assert_eq "udp://z" "$("$BIN" -i "$f" -g .outgoing.0)" "array: element replaced in place"
+    assert_eq "unix:/tmp/b" "$("$BIN" -i "$f" -g .outgoing.1)" "array: other elements preserved"
+}
+
+case_set_array_append() {
+    f=$(array_fixture)
+    "$BIN" -i "$f" -s .outgoing.3 tcp://new   # index == length -> append
+    assert_eq "tcp://new" "$("$BIN" -i "$f" -g .outgoing.3)" "array: append at tail (index == length)"
+    "$BIN" -i "$f" -s .outgoing.9 x >/dev/null 2>&1
+    assert_status 1 "$?" "array: index past the end is rejected"
+}
+
+case_del_array_element() {
+    f=$(array_fixture)
+    "$BIN" -i "$f" -d .outgoing.1; rc=$?
+    assert_status 0 "$rc" "array: delete element exits 0"
+    assert_eq "udp://a" "$("$BIN" -i "$f" -g .outgoing.0)" "array: element before the hole intact"
+    assert_eq "rtmps://c" "$("$BIN" -i "$f" -g .outgoing.1)" "array: element after the hole shifted down"
+}
+
+case_del_array_prunes_empty() {
+    f="$WORK/one.yaml"
+    cat > "$f" <<'YAML'
+outgoing:
+  - only
+keep: kept
+YAML
+    "$BIN" -i "$f" -d .outgoing.0
+    assert_eq "kept" "$("$BIN" -i "$f" -g .keep)" "array(prune): sibling key preserved"
+    if grep -q 'outgoing' "$f"; then
+        bad "array(prune): emptied list 'outgoing' removed"; note "file:"; sed 's/^/       /' "$f"
+    else
+        ok "array(prune): emptied list 'outgoing' removed"
+    fi
+}
+
+case_numeric_mapping_key() {
+    f="$WORK/numkey.yaml"
+    printf 'm:\n  "0": zero\n  one: 1\n' > "$f"
+    assert_eq "zero" "$("$BIN" -i "$f" -g .m.0)" "numeric component is a key against a mapping"
+    assert_eq "1" "$("$BIN" -i "$f" -g .m.one)" "numeric-key mapping otherwise unaffected"
+}
+
 case_unknown_option() {
     f=$(fixture)
     "$BIN" -i "$f" --frobnicate >/dev/null 2>&1
@@ -166,6 +242,8 @@ case_missing_file() {
 
 CASES="get get_nested get_missing set set_output_file set_new_key \
        del del_prunes_empty_parent del_prunes_recursive \
+       get_array_element get_array_whole set_array_replace set_array_append \
+       del_array_element del_array_prunes_empty numeric_mapping_key \
        unknown_option no_mode missing_file"
 
 run_case() { printf '# %s\n' "$1"; "case_$1"; }
