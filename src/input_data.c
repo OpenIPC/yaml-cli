@@ -1,6 +1,5 @@
 #include "input_data.h"
 
-#include <stdlib.h>
 #include <string.h>
 
 #define DEFAULT_INPUT_FILE "/etc/majestic.yaml"
@@ -80,7 +79,6 @@ static int parse_args(int argc, char *argv[]) {
             }
 
             g_args.variable_path = argv[k + 1];
-            // g_args.variable_value = argv[k + 1];
             g_args.mode = WORK_DEL;
             k++;
         } else {
@@ -130,47 +128,26 @@ static FILE *open_file(const char *file_type, const char *path,
     return file;
 }
 
-static int open_input_file() {
-    g_args.in_file.file = open_file("input", g_args.in_file.path, "r");
-    return g_args.in_file.file != NULL;
-}
-
-static int open_output_file() {
-    g_args.out_file.file = open_file("output", g_args.out_file.path, "w");
-    return g_args.out_file.file != NULL;
-}
-
 prog_args_t *get_args() { return &g_args; }
 
 int init_input(int argc, char *argv[]) {
     if (!parse_args(argc, argv))
         return 0;
 
-    if (!open_input_file())
-        return 0;
-
-    return 1;
+    g_args.in_file.file = open_file("input", g_args.in_file.path, "r");
+    return g_args.in_file.file != NULL;
 }
 
 void deinit_input() {
-    if (g_args.in_file.file != NULL)
+    if (g_args.in_file.file != NULL) {
         fclose(g_args.in_file.file);
+        g_args.in_file.file = NULL;
+    }
 }
 
-int write_to_out_file(char *buffer, size_t buffer_size) {
-    int ret_code = 1;
-
+FILE *open_output_file() {
     if (g_args.out_file.path == NULL)
         g_args.out_file.path = g_args.in_file.path;
 
-    if (!open_output_file())
-        return 0;
-
-    if ((fwrite(buffer, buffer_size, 1, g_args.out_file.file)) != 1) {
-        fprintf(stderr, "File write failed\n");
-        ret_code = 0;
-    }
-
-    fclose(g_args.out_file.file);
-    return ret_code;
+    return open_file("output", g_args.out_file.path, "w");
 }

@@ -1,191 +1,163 @@
-#include "buffer_emitter.h"
 #include "input_data.h"
-#include "value_finder.h"
-#include "yaml_iterator.h"
+#include "yaml_doc.h"
 
-static prog_args_t *g_args = NULL;
-static value_finder_t *g_value_finder = NULL;
-static int g_value_finded = 0;
+#include <stdlib.h>
+#include <string.h>
+#include <yaml.h>
 
-static int on_read_input_file(void *data, unsigned char *buffer, size_t size,
-                              size_t *size_read) {
-    *size_read = fread(buffer, 1, size, g_args->in_file.file);
-    return !ferror(g_args->in_file.file);
+static void print_parser_error(yaml_parser_t *parser) {
+    switch (parser->error) {
+    case YAML_MEMORY_ERROR:
+        fprintf(stderr, "Memory error: Not enough memory for parsing\n");
+        break;
+    case YAML_READER_ERROR:
+        if (parser->problem_value != -1)
+            fprintf(stderr, "Reader error: %s: #%X at %zd\n", parser->problem,
+                    parser->problem_value, parser->problem_offset);
+        else
+            fprintf(stderr, "Reader error: %s at %zd\n", parser->problem,
+                    parser->problem_offset);
+        break;
+    case YAML_SCANNER_ERROR:
+    case YAML_PARSER_ERROR:
+    case YAML_COMPOSER_ERROR:
+        if (parser->context)
+            fprintf(
+                stderr,
+                "Parse error: %s at line %lu, column %lu\n"
+                "%s at line %lu, column %lu\n",
+                parser->context, (unsigned long)parser->context_mark.line + 1,
+                (unsigned long)parser->context_mark.column + 1, parser->problem,
+                (unsigned long)parser->problem_mark.line + 1,
+                (unsigned long)parser->problem_mark.column + 1);
+        else
+            fprintf(stderr, "Parse error: %s at line %lu, column %lu\n",
+                    parser->problem,
+                    (unsigned long)parser->problem_mark.line + 1,
+                    (unsigned long)parser->problem_mark.column + 1);
+        break;
+    default:
+        fprintf(stderr, "Internal parser error\n");
+        break;
+    }
 }
 
-static yaml_iterator_event_result_t on_iterator_event(void *data,
-                                                      yaml_event_t *event) {
-    buffer_emitter_t *emitter = (buffer_emitter_t *)data;
-    yaml_event_t ins_event;
-    int g_value_finder_ret = g_value_finder->input(g_value_finder, event);
-
-    if (g_args->mode == WORK_GET) {
-        if (g_value_finder_ret == 1) {
-            return YAML_ITERATOR_EVENT_STOP;
-        }
+static void print_emitter_error(yaml_emitter_t *emitter) {
+    switch (emitter->error) {
+    case YAML_MEMORY_ERROR:
+        fprintf(stderr, "Memory error: Not enough memory for emitting\n");
+        break;
+    case YAML_WRITER_ERROR:
+        fprintf(stderr, "Writer error: %s\n", emitter->problem);
+        break;
+    case YAML_EMITTER_ERROR:
+        fprintf(stderr, "Emitter error: %s\n", emitter->problem);
+        break;
+    default:
+        fprintf(stderr, "Internal emitter error\n");
+        break;
     }
-
-    if (g_args->mode == WORK_SET) {
-        if (g_value_finder_ret == 4) {
-            if (!g_value_finded) {
-                char value_block[strlen(g_args->variable_path)];
-                strcpy(value_block, g_args->variable_path + 1);
-                value_block[strstr(value_block + 1, ".") - value_block] = '\0';
-
-                if (!yaml_scalar_event_initialize(
-                        &ins_event, NULL, NULL, (yaml_char_t *)value_block,
-                        strlen(value_block), 1, 0, YAML_PLAIN_SCALAR_STYLE))
-                    return YAML_ITERATOR_EVENT_STOP;
-
-                if (!emitter->input(data, &ins_event))
-                    return YAML_ITERATOR_EVENT_STOP;
-
-                if (!yaml_mapping_start_event_initialize(
-                        &ins_event, NULL, NULL, 0, YAML_BLOCK_MAPPING_STYLE))
-                    return YAML_ITERATOR_EVENT_STOP;
-
-                if (!emitter->input(data, &ins_event)) {
-                    return YAML_ITERATOR_EVENT_STOP;
-                }
-            }
-        }
-        if ((g_value_finder_ret == 3) || (g_value_finder_ret == 4)) {
-            if (!g_value_finded) {
-
-                if (!yaml_scalar_event_initialize(
-                        &ins_event, NULL, NULL,
-                        (yaml_char_t *)strstr(g_args->variable_path + 1, ".") +
-                            1,
-                        strlen(strstr(g_args->variable_path + 1, ".") + 1), 1,
-                        0, YAML_PLAIN_SCALAR_STYLE))
-                    return YAML_ITERATOR_EVENT_STOP;
-
-                if (!emitter->input(data, &ins_event)) {
-                    return YAML_ITERATOR_EVENT_STOP;
-                }
-                if (!yaml_scalar_event_initialize(
-                        &ins_event, NULL, NULL,
-                        (yaml_char_t *)g_args->variable_value,
-                        strlen(g_args->variable_value), 1, 0,
-                        YAML_PLAIN_SCALAR_STYLE))
-                    return YAML_ITERATOR_EVENT_STOP;
-
-                if (!emitter->input(data, &ins_event)) {
-                    return YAML_ITERATOR_EVENT_STOP;
-                }
-                if (g_value_finder_ret == 3)
-                    g_value_finded = 1;
-            }
-        }
-        if (g_value_finder_ret == 4) {
-            if (!g_value_finded) {
-
-                if (!yaml_mapping_end_event_initialize(&ins_event))
-                    return YAML_ITERATOR_EVENT_STOP;
-
-                if (!emitter->input(data, &ins_event)) {
-                    return YAML_ITERATOR_EVENT_STOP;
-                }
-            }
-        }
-        if (!emitter->input(data, event)) {
-            return YAML_ITERATOR_EVENT_STOP;
-        }
-        return YAML_ITERATOR_EVENT_EATEN;
-    }
-
-    if (g_args->mode == WORK_DEL) {
-        if ((g_value_finder_ret == 1) || (g_value_finder_ret == 2)) {
-            return YAML_ITERATOR_EVENT_EATEN;
-        }
-        if (!emitter->input(data, event))
-            return YAML_ITERATOR_EVENT_STOP;
-
-        return YAML_ITERATOR_EVENT_EATEN;
-    }
-
-    return YAML_ITERATOR_EVENT_CONTINUE;
 }
 
-static int on_value_finded(void *data, yaml_event_t *event) {
-    value_finder_t *f = (value_finder_t *)data;
+/* Write `document` to the output file. Takes ownership of the document: it is
+ * always destroyed by the time this returns (yaml_emitter_dump deletes it, and
+ * the error paths delete it explicitly). Returns 1 on success. */
+static int emit_document(yaml_document_t *document, prog_args_t *args) {
+    yaml_emitter_t emitter;
+    FILE *out;
+    int ok = 1;
 
-    if (g_args->mode == WORK_GET) {
-        fprintf(stdout, "%s\n", event->data.scalar.value);
-
-        g_value_finded = 1;
-        return 1;
+    out = open_output_file();
+    if (out == NULL) {
+        yaml_document_delete(document);
+        return 0;
     }
 
-    if (g_args->mode == WORK_DEL) {
-        g_value_finded = 1;
-        return 1;
+    memset(&emitter, 0, sizeof(emitter));
+    if (!yaml_emitter_initialize(&emitter)) {
+        fprintf(stderr, "Could not initialize the emitter object\n");
+        yaml_document_delete(document);
+        fclose(out);
+        return 0;
     }
 
-    g_value_finded = 1;
-    free(event->data.scalar.value);
-    event->data.scalar.length = strlen(g_args->variable_value);
-    event->data.scalar.value = malloc(event->data.scalar.length + 1);
-    strncpy((char *)event->data.scalar.value, g_args->variable_value,
-            event->data.scalar.length);
-    event->data.scalar.value[event->data.scalar.length] = 0;
+    yaml_emitter_set_output_file(&emitter, out);
+    yaml_emitter_set_canonical(&emitter, args->canonical);
+    yaml_emitter_set_unicode(&emitter, args->unicode);
 
-    return 0;
+    if (!yaml_emitter_open(&emitter)) {
+        ok = 0;
+        yaml_document_delete(document); /* not consumed by dump */
+    } else if (!yaml_emitter_dump(&emitter, document)) {
+        ok = 0; /* dump destroys the document even on failure */
+    } else if (!yaml_emitter_close(&emitter)) {
+        ok = 0;
+    }
+
+    if (!ok)
+        print_emitter_error(&emitter);
+
+    yaml_emitter_delete(&emitter);
+    fclose(out);
+    return ok;
 }
 
 int main(int argc, char *argv[]) {
-    yaml_iterator_t iterator;
-    buffer_emitter_t emitter;
-    value_finder_t value_finder;
-    int emitter_ret_code = EXIT_SUCCESS;
+    yaml_parser_t parser;
+    yaml_document_t document;
+    prog_args_t *args;
+    int changed = 0;
+    int result = EXIT_SUCCESS;
 
     if (!init_input(argc, argv))
         return EXIT_FAILURE;
 
-    g_args = get_args();
+    args = get_args();
 
-    iterator.event = on_iterator_event;
-    iterator.data = &emitter;
-    iterator.read_handler = on_read_input_file;
+    memset(&parser, 0, sizeof(parser));
+    memset(&document, 0, sizeof(document));
 
-    emitter.canonical = g_args->canonical;
-    emitter.unicode = g_args->unicode;
-
-    if (!buffer_emitter_init(&emitter))
+    if (!yaml_parser_initialize(&parser)) {
+        fprintf(stderr, "Could not initialize the parser object\n");
+        deinit_input();
         return EXIT_FAILURE;
-
-    g_value_finder = &value_finder;
-    value_finder.value_path = g_args->variable_path;
-    value_finder.output = on_value_finded;
-
-    if (!value_finder_init(&value_finder))
-        return EXIT_FAILURE;
-
-    if (!yaml_iterator_run(&iterator))
-        return EXIT_FAILURE;
-
-    if (buffer_emitter_error(&emitter))
-        emitter_ret_code = EXIT_FAILURE;
-
-    buffer_emitter_deinit(&emitter);
-    value_finder_deinit(&value_finder);
-    deinit_input();
-
-    if ((g_args->mode == WORK_SET) || (g_args->mode == WORK_DEL)) {
-        if (emitter_ret_code != EXIT_FAILURE) {
-            if (!write_to_out_file(emitter.buffer, emitter.buffer_pos))
-                return EXIT_FAILURE;
-        }
     }
 
-    free(emitter.buffer);
+    yaml_parser_set_input_file(&parser, args->in_file.file);
 
-    if (g_args->mode == WORK_GET) {
-        return !g_value_finded;
-    } else {
-        if (emitter_ret_code != EXIT_SUCCESS)
-            return EXIT_FAILURE;
-
-        return !g_value_finded;
+    if (!yaml_parser_load(&parser, &document)) {
+        print_parser_error(&parser);
+        yaml_parser_delete(&parser);
+        deinit_input();
+        return EXIT_FAILURE;
     }
+
+    yaml_parser_delete(&parser);
+    deinit_input(); /* release the input file; output may reuse its path */
+
+    if (args->mode == WORK_GET) {
+        changed = yaml_doc_get(&document, args->variable_path);
+        yaml_document_delete(&document);
+        return changed ? EXIT_SUCCESS : EXIT_FAILURE;
+    }
+
+    if (args->mode == WORK_SET)
+        changed =
+            yaml_doc_set(&document, args->variable_path, args->variable_value);
+    else /* WORK_DEL */
+        changed = yaml_doc_del(&document, args->variable_path);
+
+    /* An empty document would emit as nothing and clobber the file, so skip
+     * the write in that (only reachable on essentially empty input) case. */
+    if (yaml_document_get_root_node(&document) == NULL) {
+        yaml_document_delete(&document);
+        return changed ? EXIT_SUCCESS : EXIT_FAILURE;
+    }
+
+    if (!emit_document(&document, args)) /* consumes the document */
+        result = EXIT_FAILURE;
+    else if (!changed)
+        result = EXIT_FAILURE;
+
+    return result;
 }
