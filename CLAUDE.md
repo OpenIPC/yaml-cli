@@ -34,7 +34,12 @@ Without that shim, configure fails with "Compatibility with CMake < 3.5 has been
 # -o <file> writes elsewhere; -c canonical, -u unicode; -h help
 ```
 
-Paths are always leading-dot dotted: `.block.subblock.key`.
+Paths are leading-dot dotted: `.block.subblock.key`. A numeric component indexes
+a **sequence** element when the node at that point is a list — `-g .outgoing.0`
+reads the first item, `-g .outgoing` prints the whole list one item per line,
+`-s .outgoing.N` replaces item N (or appends when N equals the length), and
+`-d .outgoing.N` removes it. Against a mapping a numeric component is an ordinary
+key, so a key literally named `0` still works.
 
 ## Tests
 
@@ -47,8 +52,8 @@ ctest --test-dir build --output-on-failure
 ```
 
 `tests/run.sh` is a dependency-free POSIX-sh runner covering get/set/del, output-file redirection,
-key insertion, empty-parent pruning (incl. recursive), and the error paths (missing key/file,
-unknown option, no mode). Each case is registered as its own CTest test in `CMakeLists.txt` (keep the
+key insertion, empty-parent pruning (incl. recursive), sequence element get/set/append/delete, and
+the error paths (missing key/file, unknown option, no mode). Each case is registered as its own CTest test in `CMakeLists.txt` (keep the
 `YAML_CLI_TEST_CASES` list in sync with the `case_*` functions in the script). Run one case directly
 with `sh tests/run.sh ./build/yaml-cli set_new_key`.
 

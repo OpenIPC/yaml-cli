@@ -51,6 +51,8 @@ set(YAML_CLI_TEST_CASES
     get get_nested get_missing
     set set_output_file set_new_key
     del del_prunes_empty_parent del_prunes_recursive
+    get_array_element get_array_whole set_array_replace set_array_append
+    del_array_element del_array_prunes_empty numeric_mapping_key
     unknown_option no_mode missing_file)
 
 foreach(case IN LISTS YAML_CLI_TEST_CASES)
